@@ -38,6 +38,7 @@
     
     if (self) {
         self.outputJPEGQuality = 1.0;
+        self.pickerType = kDLCImagePickerControllerTypeCamera;
     }
     
     return self;
@@ -73,6 +74,16 @@
     [self.imageView addSubview:self.blurOverlayView];
     
     hasBlur = NO;
+    
+    libraryToggleButton.hidden = YES;
+    if (self.pickerType == kDLCImagePickerControllerTypeStatic) {
+        cameraToggleButton.hidden = YES;
+        flashToggleButton.hidden = YES;
+        retakeButton.hidden = YES;
+        [self.photoCaptureButton setTitle:@"Done" forState:UIControlStateNormal];
+        [self.photoCaptureButton setImage:nil forState:UIControlStateNormal];
+    }
+    isStatic = self.pickerType == kDLCImagePickerControllerTypeStatic;
     
     [self loadFilters];
     
@@ -207,10 +218,10 @@
 
 -(void) prepareFilter {    
     if (![UIImagePickerController isSourceTypeAvailable: UIImagePickerControllerSourceTypeCamera]) {
-        _isStatic = YES;
+        isStatic = YES;
     }
     
-    if (!_isStatic) {
+    if (!isStatic) {
         [self prepareLiveFilter];
     } else {
         [self prepareStaticFilter];
@@ -289,7 +300,7 @@
 
 -(IBAction)switchToLibrary:(id)sender {
     
-    if (!_isStatic) {
+    if (!isStatic) {
         // shut down camera
         [stillCamera stopCameraCapture];
         [self removeAllTargets];
@@ -385,8 +396,8 @@
 -(IBAction) takePhoto:(id)sender{
     [self.photoCaptureButton setEnabled:NO];
     
-    if (!_isStatic) {
-        _isStatic = YES;
+    if (!isStatic) {
+        isStatic = YES;
         
         [self.libraryToggleButton setHidden:YES];
         [self.cameraToggleButton setEnabled:NO];
@@ -418,7 +429,7 @@
     [self.libraryToggleButton setHidden:NO];
     _staticPicture = nil;
     staticPictureOriginalOrientation = UIImageOrientationUp;
-    _isStatic = NO;
+    isStatic = NO;
     [self removeAllTargets];
     [stillCamera startCameraCapture];
     [self.cameraToggleButton setEnabled:YES];
@@ -453,7 +464,7 @@
         if ([sender state] == UIGestureRecognizerStateBegan) {
             [self showBlurOverlay:YES];
             [gpu setBlurSize:0.0f];
-            if (_isStatic) {
+            if (isStatic) {
                 [_staticPicture processImage];
             }
         }
@@ -467,7 +478,7 @@
         if([sender state] == UIGestureRecognizerStateEnded){
             [gpu setBlurSize:kStaticBlurSize];
             [self showBlurOverlay:NO];
-            if (_isStatic) {
+            if (isStatic) {
                 [_staticPicture processImage];
             }
         }
@@ -475,7 +486,7 @@
 }
 
 - (IBAction) handleTapToFocus:(UITapGestureRecognizer *)tgr{
-	if (!_isStatic && tgr.state == UIGestureRecognizerStateRecognized) {
+	if (!isStatic && tgr.state == UIGestureRecognizerStateRecognized) {
 		CGPoint location = [tgr locationInView:self.imageView];
 		AVCaptureDevice *device = stillCamera.inputCamera;
 		CGPoint pointOfInterest = CGPointMake(.5f, .5f);
@@ -520,7 +531,7 @@
         if ([sender state] == UIGestureRecognizerStateBegan) {
             [self showBlurOverlay:YES];
             [gpu setBlurSize:0.0f];
-            if (_isStatic) {
+            if (isStatic) {
                 [_staticPicture processImage];
             }
         }
@@ -538,7 +549,7 @@
         if ([sender state] == UIGestureRecognizerStateEnded) {
             [gpu setBlurSize:kStaticBlurSize];
             [self showBlurOverlay:NO];
-            if (_isStatic) {
+            if (isStatic) {
                 [_staticPicture processImage];
             }
         }
@@ -665,7 +676,7 @@
     if (outputImage) {
         _staticPicture = [[GPUImagePicture alloc] initWithImage:outputImage smoothlyScaleOutput:YES];
         staticPictureOriginalOrientation = outputImage.imageOrientation;
-        _isStatic = YES;
+        isStatic = YES;
         [self dismissViewControllerAnimated:YES completion:nil];
         [self.cameraToggleButton setEnabled:NO];
         [self.flashToggleButton setEnabled:NO];
@@ -681,7 +692,7 @@
 }
 
 - (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker {
-    if (_isStatic) {
+    if (isStatic) {
         // TODO: fix this hack
         [self dismissViewControllerAnimated:NO completion:nil];
         [self.delegate imagePickerControllerDidCancel:self];

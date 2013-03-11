@@ -48,7 +48,7 @@
     picker.delegate = self;
     UIImage *sampleImage = [UIImage imageNamed:@"sample1.jpg"];
     picker.staticPicture = [[GPUImagePicture alloc] initWithImage:sampleImage smoothlyScaleOutput:YES];
-    picker.isStatic = YES;
+    picker.pickerType = kDLCImagePickerControllerTypeStatic;
     [self presentModalViewController:picker animated:YES];
 }
 

@@ -23,9 +23,14 @@
     GPUImageOutput<GPUImageInput> *filter;
     GPUImageOutput<GPUImageInput> *blurFilter;
     GPUImageCropFilter *cropFilter;
+    BOOL isStatic;
     UIImageOrientation staticPictureOriginalOrientation;
-    
 }
+
+typedef enum {
+    kDLCImagePickerControllerTypeCamera,
+    kDLCImagePickerControllerTypeStatic
+} DLCImagePickerControllerType;
 
 @property (nonatomic, weak) IBOutlet GPUImageView *imageView;
 @property (nonatomic, weak) id <DLCImagePickerDelegate> delegate;
@@ -46,7 +51,7 @@
 @property (nonatomic, strong) BlurOverlayView *blurOverlayView;
 @property (nonatomic, strong) UIImageView *focusView;
 
-@property (nonatomic) BOOL isStatic;
+@property (nonatomic) DLCImagePickerControllerType pickerType;
 @property (nonatomic, strong) GPUImagePicture *staticPicture;
 
 @property (nonatomic, assign) CGFloat outputJPEGQuality;
