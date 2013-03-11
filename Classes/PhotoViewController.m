@@ -26,26 +26,29 @@
     return self;
 }
 
-- (void)loadView 
+- (void)loadView
 {
-	CGRect mainScreenFrame = [[UIScreen mainScreen] bounds];
-	UIView *primaryView = [[GPUImageView alloc] initWithFrame:mainScreenFrame];
+    CGRect mainScreenFrame = [[UIScreen mainScreen] bounds];
+    UIView *primaryView = [[GPUImageView alloc] initWithFrame:mainScreenFrame];
     
     showPickerButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
     showPickerButton.frame = CGRectMake(round(mainScreenFrame.size.width / 2.0 - 150.0 / 2.0), mainScreenFrame.size.height - 90.0, 150.0, 40.0);
     [showPickerButton setTitle:@"Show picker" forState:UIControlStateNormal];
-	showPickerButton.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleTopMargin;
+    showPickerButton.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleTopMargin;
     [showPickerButton addTarget:self action:@selector(takePhoto:) forControlEvents:UIControlEventTouchUpInside];
     [showPickerButton setTitleColor:[UIColor grayColor] forState:UIControlStateDisabled];
     
     [primaryView addSubview:showPickerButton];
     
-	self.view = primaryView;	
+    self.view = primaryView;
 }
 
 -(void) takePhoto:(id)sender{
     DLCImagePickerController *picker = [[DLCImagePickerController alloc] init];
     picker.delegate = self;
+    UIImage *sampleImage = [UIImage imageNamed:@"sample1.jpg"];
+    picker.staticPicture = [[GPUImagePicture alloc] initWithImage:sampleImage smoothlyScaleOutput:YES];
+    picker.isStatic = YES;
     [self presentModalViewController:picker animated:YES];
 }
 
@@ -62,12 +65,12 @@
         ALAssetsLibrary *library = [[ALAssetsLibrary alloc] init];
         [library writeImageDataToSavedPhotosAlbum:[info objectForKey:@"data"] metadata:nil completionBlock:^(NSURL *assetURL, NSError *error)
          {
-             if (error) {
-                 NSLog(@"ERROR: the image failed to be written");
-             }
-             else {
-                 NSLog(@"PHOTO SAVED - assetURL: %@", assetURL);
-             }
+           if (error) {
+               NSLog(@"ERROR: the image failed to be written");
+           }
+           else {
+               NSLog(@"PHOTO SAVED - assetURL: %@", assetURL);
+           }
          }];
     }
 }

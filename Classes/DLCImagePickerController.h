@@ -23,7 +23,6 @@
     GPUImageOutput<GPUImageInput> *filter;
     GPUImageOutput<GPUImageInput> *blurFilter;
     GPUImageCropFilter *cropFilter;
-    GPUImagePicture *staticPicture;
     UIImageOrientation staticPictureOriginalOrientation;
     
 }
@@ -46,6 +45,9 @@
 @property (nonatomic, weak) IBOutlet UIView *topBar;
 @property (nonatomic, strong) BlurOverlayView *blurOverlayView;
 @property (nonatomic, strong) UIImageView *focusView;
+
+@property (nonatomic) BOOL isStatic;
+@property (nonatomic, strong) GPUImagePicture *staticPicture;
 
 @property (nonatomic, assign) CGFloat outputJPEGQuality;
 

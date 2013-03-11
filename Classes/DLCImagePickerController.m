@@ -12,7 +12,6 @@
 #define kStaticBlurSize 2.0f
 
 @implementation DLCImagePickerController {
-    BOOL isStatic;
     BOOL hasBlur;
     int selectedFilter;
 }
@@ -90,6 +89,7 @@
 -(void) viewWillAppear:(BOOL)animated {
     [[UIApplication sharedApplication] setStatusBarHidden:YES withAnimation:UIStatusBarAnimationSlide];
     [super viewWillAppear:animated];
+    [self showFilters];
 }
 
 -(void) loadFilters {
@@ -207,10 +207,10 @@
 
 -(void) prepareFilter {    
     if (![UIImagePickerController isSourceTypeAvailable: UIImagePickerControllerSourceTypeCamera]) {
-        isStatic = YES;
+        _isStatic = YES;
     }
     
-    if (!isStatic) {
+    if (!_isStatic) {
         [self prepareLiveFilter];
     } else {
         [self prepareStaticFilter];
@@ -236,12 +236,12 @@
 
 -(void) prepareStaticFilter {
     
-    if (!staticPicture) {
+    if (!_staticPicture) {
         // TODO: fix this hack
         [self performSelector:@selector(switchToLibrary:) withObject:nil afterDelay:0.5];
     }
     
-    [staticPicture addTarget:filter];
+    [_staticPicture addTarget:filter];
 
     // blur is terminal filter
     if (hasBlur) {
@@ -272,12 +272,12 @@
     [self.imageView setInputRotation:imageViewRotationMode atIndex:0];
 
     
-    [staticPicture processImage];        
+    [_staticPicture processImage];
 }
 
 -(void) removeAllTargets {
     [stillCamera removeAllTargets];
-    [staticPicture removeAllTargets];
+    [_staticPicture removeAllTargets];
     [cropFilter removeAllTargets];
     
     //regular filter
@@ -289,7 +289,7 @@
 
 -(IBAction)switchToLibrary:(id)sender {
     
-    if (!isStatic) {
+    if (!_isStatic) {
         // shut down camera
         [stillCamera stopCameraCapture];
         [self removeAllTargets];
@@ -367,7 +367,7 @@
     [stillCamera stopCameraCapture];
     [self removeAllTargets];
     
-    staticPicture = [[GPUImagePicture alloc] initWithImage:img
+    _staticPicture = [[GPUImagePicture alloc] initWithImage:img
                                        smoothlyScaleOutput:YES];
     
     staticPictureOriginalOrientation = img.imageOrientation;
@@ -385,8 +385,8 @@
 -(IBAction) takePhoto:(id)sender{
     [self.photoCaptureButton setEnabled:NO];
     
-    if (!isStatic) {
-        isStatic = YES;
+    if (!_isStatic) {
+        _isStatic = YES;
         
         [self.libraryToggleButton setHidden:YES];
         [self.cameraToggleButton setEnabled:NO];
@@ -403,7 +403,7 @@
             processUpTo = filter;
         }
         
-        [staticPicture processImage];
+        [_staticPicture processImage];
         
         UIImage *currentFilteredVideoFrame = [processUpTo imageFromCurrentlyProcessedOutputWithOrientation:staticPictureOriginalOrientation];
 
@@ -416,9 +416,9 @@
 -(IBAction) retakePhoto:(UIButton *)button {
     [self.retakeButton setHidden:YES];
     [self.libraryToggleButton setHidden:NO];
-    staticPicture = nil;
+    _staticPicture = nil;
     staticPictureOriginalOrientation = UIImageOrientationUp;
-    isStatic = NO;
+    _isStatic = NO;
     [self removeAllTargets];
     [stillCamera startCameraCapture];
     [self.cameraToggleButton setEnabled:YES];
@@ -453,8 +453,8 @@
         if ([sender state] == UIGestureRecognizerStateBegan) {
             [self showBlurOverlay:YES];
             [gpu setBlurSize:0.0f];
-            if (isStatic) {
-                [staticPicture processImage];
+            if (_isStatic) {
+                [_staticPicture processImage];
             }
         }
         
@@ -467,15 +467,15 @@
         if([sender state] == UIGestureRecognizerStateEnded){
             [gpu setBlurSize:kStaticBlurSize];
             [self showBlurOverlay:NO];
-            if (isStatic) {
-                [staticPicture processImage];
+            if (_isStatic) {
+                [_staticPicture processImage];
             }
         }
     }
 }
 
 - (IBAction) handleTapToFocus:(UITapGestureRecognizer *)tgr{
-	if (!isStatic && tgr.state == UIGestureRecognizerStateRecognized) {
+	if (!_isStatic && tgr.state == UIGestureRecognizerStateRecognized) {
 		CGPoint location = [tgr locationInView:self.imageView];
 		AVCaptureDevice *device = stillCamera.inputCamera;
 		CGPoint pointOfInterest = CGPointMake(.5f, .5f);
@@ -520,8 +520,8 @@
         if ([sender state] == UIGestureRecognizerStateBegan) {
             [self showBlurOverlay:YES];
             [gpu setBlurSize:0.0f];
-            if (isStatic) {
-                [staticPicture processImage];
+            if (_isStatic) {
+                [_staticPicture processImage];
             }
         }
         
@@ -538,8 +538,8 @@
         if ([sender state] == UIGestureRecognizerStateEnded) {
             [gpu setBlurSize:kStaticBlurSize];
             [self showBlurOverlay:NO];
-            if (isStatic) {
-                [staticPicture processImage];
+            if (_isStatic) {
+                [_staticPicture processImage];
             }
         }
     }
@@ -642,7 +642,7 @@
     cropFilter = nil;
     filter = nil;
     blurFilter = nil;
-    staticPicture = nil;
+    _staticPicture = nil;
     self.blurOverlayView = nil;
     self.focusView = nil;
 }
@@ -663,9 +663,9 @@
     }
     
     if (outputImage) {
-        staticPicture = [[GPUImagePicture alloc] initWithImage:outputImage smoothlyScaleOutput:YES];
+        _staticPicture = [[GPUImagePicture alloc] initWithImage:outputImage smoothlyScaleOutput:YES];
         staticPictureOriginalOrientation = outputImage.imageOrientation;
-        isStatic = YES;
+        _isStatic = YES;
         [self dismissViewControllerAnimated:YES completion:nil];
         [self.cameraToggleButton setEnabled:NO];
         [self.flashToggleButton setEnabled:NO];
@@ -681,7 +681,7 @@
 }
 
 - (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker {
-    if (isStatic) {
+    if (_isStatic) {
         // TODO: fix this hack
         [self dismissViewControllerAnimated:NO completion:nil];
         [self.delegate imagePickerControllerDidCancel:self];
